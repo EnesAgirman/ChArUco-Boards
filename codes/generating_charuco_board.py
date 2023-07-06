@@ -17,9 +17,11 @@ myGridBoard = cv.aruco.CharucoBoard.create(xNum, yNum, squareSize, markerSize, m
 # myGridBoard.setIds( np.array([3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]) ) # Assign the ID's of the aruco markers on the gridboard
 # print(myGridBoard.ids)    # Display the id's of the aruco markers on the gridboard
 
-myImage = myGridBoard.draw(outSize=imageSize)   # Generate an image of the charuco board using the gridboard
+myCharucoBoardImage = myGridBoard.draw(outSize=imageSize)   # Generate an image of the charuco board using the gridboard
 
-cv.imshow("My Image", myImage)  # Display the charuco board image
+cv.imwrite("images/random_charuco_board.jpg", myCharucoBoardImage)
+
+cv.imshow("My Image", myCharucoBoardImage)  # Display the charuco board image
 
 
 cv.waitKey(0)
