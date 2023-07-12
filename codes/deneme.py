@@ -1,5 +1,6 @@
 from types import NoneType
 import cv2 as cv
+from cv2 import*
 import numpy as np
 from cv2 import aruco
 import time
@@ -27,6 +28,8 @@ def readCharuco(aImage, aDict, aCharucoBoard, aCount):
         corners_all.append(charuco_corners)
         ids_all.append(charuco_ids)
         
+        print(type(charuco_corners))
+        
         # corners_all = np.squeeze(corners_all)
         # myIDs = np.squeeze(myIDs)
         
@@ -48,16 +51,12 @@ def readCharuco(aImage, aDict, aCharucoBoard, aCount):
                                                                                            cameraMatrix=None,
                                                                                            distCoeffs=None)
         
-        print(rvecs)
+
         cv.drawFrameAxes(image=aImage, cameraMatrix=cameraMatrix, distCoeffs=distCoeffs, rvec=rvecs[0], tvec=tvecs[0], length=0.3, thickness=3)
         
-        print(rvecs)
+
         
         return aImage
-        
-        
-        
-        
         
 
    
@@ -68,9 +67,8 @@ def readFile(aDict, aCharucoBoard):
 
     for myFileName in glob.glob('images\webcam_calibration/*.jpg'):
         count = count+1
-        myFrame = cv.imread(myFileName)
         
-        cv.imshow(myFileName, myFrame)
+        myFrame = campureImage()
 
         myFrame = readCharuco(myFrame, aDict, aCharucoBoard, count)
 
@@ -80,6 +78,41 @@ def readFile(aDict, aCharucoBoard):
         
         if cv.waitKey(1) & 0xFF == ord(' '):
             break
+        break
+
+def campureImage():
+    cam = cv.VideoCapture(0)
+
+    cv.namedWindow("test")
+
+    img_counter = 0
+
+    while True:
+        ret, frame = cam.read()
+        if not ret:
+            print("failed to grab frame")
+            break
+        cv.imshow("test", frame)
+
+        k = cv.waitKey(1)
+        if k%256 == 27:
+            # ESC pressed
+            print("Escape hit, closing...")
+            return None
+            break
+        elif k%256 == 32:
+            # SPACE pressed
+            img_name = "opencv_frame_{}.png".format(img_counter)
+            # cv2.imwrite(img_name, frame)
+            return frame
+            print("{} written!".format(img_name))
+            img_counter += 1
+
+    cam.release()
+
+
+
+
 
 xNum = 7    # The number of squares in the X direction
 yNum = 5    # The number of squares in the Y direction
@@ -95,30 +128,14 @@ imageSize = (7*120, 5*120)  # The size of the image of the charuco board
 # The gridboard that includes the charuco board information
 myGridBoard = cv.aruco.CharucoBoard.create(xNum, yNum, squareSize, markerSize, myDict)
 
-readFile(myDict, myGridBoard)
+k = 32 
+while k%256 == 32:
+    readFile(myDict, myGridBoard)
+    k = cv.waitKey(0)
 
 cv.waitKey(0)
 
 print("\n\n\nExecution Finished\n\n\n")
-
-
-
-
-
-
-
-
-
-""" 
-myPath = "images\webcam_calibration"
-
-for filename in glob.glob('images\webcam_calibration/*.jpg'):
-    cv.imshow(filename, cv.imread(filename))
-
-
-
- """
-
 
 
 
