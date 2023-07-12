@@ -25,19 +25,24 @@ class CharucoBoard():
         self.corners_all = [] # Corners discovered in all images processed
         self.ids_all = [] # Aruco ids corresponding to corners discovered
         
-        self.image_size = (self.image.shape[0], self.image.shape[1])
-        self.grayScaledImage = cv.cvtColor(self.image, cv.COLOR_BGR2GRAY)
-        self.corners, self.ids, _ = aruco.detectMarkers( image=self.grayScaledImage, dictionary=self.dict)
-        self.image = aruco.drawDetectedMarkers(image=self.image, corners=self.corners) # add ids=self.ids to also draw id's of aruco markers
-        print(self.ids)
-        self.ReadCharuco(self.ids, self.corners, self.grayScaledImage, self.charucoBoard, self.corners_all, self.ids_all)
-        self.cameraMatrix, self.distCoeffs, self.rvecs, self.tvecs = self.FindIntrinsicAndExtrinsicCoefficients(self.corners_all,
-                                                                                                                self.ids_all, 
-                                                                                                                self.charucoBoard, 
-                                                                                                                self.image_size)
-        self.image = self.drawFrameAxesOnImage(self.image, self.cameraMatrix, self.distCoeffs, self.rvecs, self.tvecs, 0.3, 3)
-        cv.imshow("hehehehhe boi", self.image)
-        cv.waitKey(0)
+        if self.image is not None:
+            self.image_size = (self.image.shape[0], self.image.shape[1])
+            self.grayScaledImage = cv.cvtColor(self.image, cv.COLOR_BGR2GRAY)
+            self.corners, self.ids, _ = aruco.detectMarkers( image=self.grayScaledImage, dictionary=self.dict)
+            if (self.corners is not None) & (self.ids is not None):
+                self.image = aruco.drawDetectedMarkers(image=self.image, corners=self.corners) # add ids=self.ids to also draw id's of aruco markers
+                self.ReadCharuco(self.ids, self.corners, self.grayScaledImage, self.charucoBoard, self.corners_all, self.ids_all)
+                self.cameraMatrix, self.distCoeffs, self.rvecs, self.tvecs = self.FindIntrinsicAndExtrinsicCoefficients(self.corners_all,
+                                                                                                                        self.ids_all, 
+                                                                                                                        self.charucoBoard, 
+                                                                                                                        self.image_size)
+                self.image = self.drawFrameAxesOnImage(self.image, 
+                                                    self.cameraMatrix, 
+                                                    self.distCoeffs, 
+                                                    self.rvecs, 
+                                                    self.tvecs, 
+                                                    aLength=0.3, 
+                                                    aThickness=3)
 
 
     def ReadCharuco(self, aIds, aCorners, aImageGrayScale, aCharucoBoard, aCornersAll, aIdsAll):
@@ -149,12 +154,41 @@ class CharucoBoard():
             aImage: the image with the axes drawn
         """
         cv.drawFrameAxes(image=aImage, cameraMatrix=aCameraMatrix, distCoeffs=aDistCoeffs, rvec=aRvecs[0], tvec=aTvecs[0], length=aLength, thickness=aThickness)
-        
+        cv.imshow("result", aImage)
         return aImage
     
+    
+def TakePicturesWithWebcam(aKey):
+    cam = cv.VideoCapture(0)
+
+    cv.namedWindow("video")
+
+    img_counter = 0
+
+    while aKey%256 != 27:
+        ret, frame = cam.read()
+        if not ret:
+            print("failed to grab frame")
+            break
+        cv.imshow("video", frame)
+
+        k = cv.waitKey(1)
+        if k%256 == 27:
+            # ESC pressed
+            print("Escape hit, closing...")
+            return frame
+            break
+        elif k%256 == 32:
+            # SPACE pressed
+            img_counter += 1
+            return frame
+            break
+
+    cam.release()
+
 
 def main():
-    myImage = cv.imread("images\webcam_calibration\image_3.jpg")
+    # myImage = cv.imread("images\webcam_calibration\image_3.jpg")
     xNum = 7    # The number of squares in the X direction
     yNum = 5    # The number of squares in the Y direction
 
@@ -164,13 +198,17 @@ def main():
     myDict = aruco.Dictionary_get(aruco.DICT_7X7_100 ) # The dictionary that we use for the aruco markers my images
     # myDict = aruco.Dictionary_get(aruco.DICT_6X6_1000 ) # The dictionary that we use for the aruco markers for testCase image
 
-    imageSize = (7*120, 5*120)  # The size of the image of the charuco board
-
     # The gridboard that includes the charuco board information
     myGridBoard = cv.aruco.CharucoBoard.create(xNum, yNum, squareSize, markerSize, myDict)
-    x = CharucoBoard(myImage, myDict, myGridBoard)
-
-
+    
+    k = 32 
+    while k%256 == 32:
+        myImage = TakePicturesWithWebcam(k)
+        myCharucoBoard = CharucoBoard(myImage, myDict, myGridBoard)
+        cv.imshow("result", myCharucoBoard.image)
+        print("\nheyya\n")
+        k = cv.waitKey(0)
+    
 
     
 if __name__ == "__main__":
