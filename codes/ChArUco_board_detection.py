@@ -201,7 +201,9 @@ def main():
     # The gridboard that includes the charuco board information
     myGridBoard = cv.aruco.CharucoBoard.create(xNum, yNum, squareSize, markerSize, myDict)
     
-    k = 32 
+    
+    # this part is to take photos repeatedly until use presses esc
+    k = 32 # key code of space, it initializes the key code as you pressed space
     while k%256 == 32:
         myImage = TakePicturesWithWebcam(k)
         myCharucoBoard = CharucoBoard(myImage, myDict, myGridBoard)
